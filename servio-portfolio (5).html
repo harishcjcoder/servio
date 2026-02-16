@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SERVIO — Precision in Every Frame</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --black: #0A0E1A;
+            --charcoal: #151B2D;
+            --accent: #00D4FF;
+            --accent-dim: #0099CC;
+            --accent-light: #33E0FF;
+            --white: #F0F4F8;
+            --gray: #A8B5C7;
+            --gray-dark: #5A6B82;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--black);
+            color: var(--white);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Simple Custom Cursor */
+        .cursor {
+            width: 12px;
+            height: 12px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            transition: transform 0.1s ease;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference;
+        }
+
+        .cursor-follower {
+            display: none;
+        }
+
+        .cursor.active {
+            transform: translate(-50%, -50%) scale(1.5);
+        }
+
+        /* Grain texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.4;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: linear-gradient(to bottom, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0) 100%);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: 0.1em;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover .logo-icon {
+            transform: rotate(360deg);
+        }
+
+        .logo-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Update logo colors to match theme */
+        .logo-icon circle,
+        .logo-icon path {
+            fill: var(--accent);
+            stroke: var(--accent);
+        }
+
+        .logo-icon circle[opacity] {
+            fill: var(--accent-light);
+        }
+
+        /* Pulse animation for logo nodes */
+        @keyframes nodePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .logo-icon circle {
+            animation: nodePulse 2s ease-in-out infinite;
+        }
+
+        .logo-icon circle:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .logo-icon circle:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .logo-icon circle:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .logo-icon circle:nth-child(4) {
+            animation-delay: 0.6s;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 3rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--white);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 5%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 900px;
+            height: 900px;
+            background: radial-gradient(circle, rgba(0,212,255,0.2) 0%, rgba(51,224,255,0.1) 50%, transparent 70%);
+            animation: pulse 6s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1); 
+                opacity: 0.5; 
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.3); 
+                opacity: 0.8; 
+            }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            animation: fadeInUp 1.2s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 8vw, 7rem);
+            font-weight: 400;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            color: var(--white);
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 .highlight {
+            font-style: italic;
+            color: var(--accent);
+            display: block;
+            animation: fadeInUp 1.2s ease-out 0.3s backwards;
+        }
+
+        .hero-subtitle {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1.2rem, 2vw, 1.8rem);
+            color: var(--gray);
+            margin-bottom: 3rem;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            animation: fadeInUp 1.2s ease-out 0.6s backwards;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            animation: fadeInUp 1.2s ease-out 0.9s backwards;
+        }
+
+        .btn {
+            padding: 1rem 2.5rem;
+            text-decoration: none;
+            font-size: 0.9rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 500;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            border: 1px solid;
+            position: relative;
+            overflow: hidden;
+            transform-origin: center;
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease, height 0.6s ease;
+        }
+
+        .btn:hover::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--black);
+            border-color: var(--accent);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+            z-index: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.6);
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--white);
+            border-color: var(--accent);
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent);
+            color: var(--black);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.5);
+        }
+
+        /* Section Base */
+        section {
+            padding: 8rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            margin-bottom: 4rem;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .section-header.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            color: var(--accent-dim);
+            letter-spacing: 0.2em;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+        }
+
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .section-description {
+            font-size: 1.1rem;
+            color: var(--gray);
+            max-width: 700px;
+            line-height: 1.8;
+        }
+
+        /* About Section */
+        #about {
+            background: linear-gradient(to bottom, var(--black) 0%, var(--charcoal) 100%);
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6rem;
+            align-items: center;
+        }
+
+        .about-text h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--accent);
+        }
+
+        .about-text p {
+            font-size: 1.1rem;
+            color: var(--gray);
+            margin-bottom: 1.5rem;
+            line-height: 1.9;
+        }
+
+        .philosophy {
+            margin-top: 3rem;
+            padding: 2rem;
+            border-left: 3px solid var(--accent);
+            background: rgba(0,212,255,0.08);
+        }
+
+        .philosophy-label {
+            font-size: 0.8rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .philosophy-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--white);
+            line-height: 1.6;
+        }
+
+        .about-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .about-visual .large-logo {
+            width: 280px;
+            height: 280px;
+            opacity: 0.12;
+            position: relative;
+        }
+
+        .about-visual .large-logo svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 40px rgba(255, 107, 53, 0.3));
+        }
+
+        /* Skills Section */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+            margin-top: 4rem;
+        }
+
+        .skill-card {
+            padding: 3rem 2rem;
+            background: var(--charcoal);
+            border: 1px solid rgba(0,212,255,0.2);
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            opacity: 0;
+            transform: translateY(30px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skill-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0,212,255,0.15) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .skill-card:hover::before {
+            opacity: 1;
+        }
+
+        .skill-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .skill-card:hover {
+            border-color: var(--accent);
+            background: rgba(0,212,255,0.1);
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(0, 212, 255, 0.4);
+        }
+
+        .skill-icon {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .skill-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 5px 15px rgba(0, 212, 255, 0.4)) brightness(1.1) saturate(1.2);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .skill-card:hover .skill-icon img {
+            transform: scale(1.15) translateY(-5px);
+            filter: drop-shadow(0 10px 30px rgba(0, 212, 255, 0.8)) brightness(1.2) saturate(1.3);
+        }
+
+        .skill-card h3 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            color: var(--white);
+        }
+
+        .skill-label {
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .skill-card p {
+            color: var(--gray);
+            line-height: 1.7;
+        }
+
+        /* Portfolio Section */
+        #portfolio {
+            background: var(--black);
+        }
+
+        .portfolio-grid {
+            display: grid;
+            gap: 5rem;
+            margin-top: 4rem;
+        }
+
+        .portfolio-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s ease;
+        }
+
+        .portfolio-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .portfolio-item:nth-child(even) {
+            direction: rtl;
+        }
+
+        .portfolio-item:nth-child(even) > * {
+            direction: ltr;
+        }
+
+        .portfolio-image {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: linear-gradient(135deg, var(--charcoal) 0%, var(--black) 100%);
+            border: 1px solid rgba(0,212,255,0.3);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            cursor: pointer;
+        }
+
+        .portfolio-image::before {
+            content: '▶';
+            font-size: 4rem;
+            color: var(--accent);
+            opacity: 0.4;
+            transition: all 0.4s ease;
+            transform: scale(1);
+        }
+
+        .portfolio-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,212,255,0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .portfolio-image:hover {
+            transform: scale(1.05);
+            border-color: var(--accent);
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.5);
+        }
+
+        .portfolio-image:hover::before {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+
+        .portfolio-image:hover::after {
+            left: 100%;
+        }
+
+        .portfolio-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            color: var(--accent-dim);
+            margin-bottom: 1rem;
+            letter-spacing: 0.2em;
+        }
+
+        .portfolio-item h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--white);
+        }
+
+        .portfolio-item p {
+            color: var(--gray);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+
+        .portfolio-focus {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .focus-tag {
+            padding: 0.5rem 1rem;
+            background: rgba(0,212,255,0.15);
+            border: 1px solid rgba(0,212,255,0.4);
+            color: var(--accent);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .focus-tag::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--accent);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .focus-tag:hover {
+            color: var(--black);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .focus-tag:hover::before {
+            left: 0;
+        }
+
+        /* Workflow Section */
+        #workflow {
+            background: linear-gradient(to bottom, var(--black) 0%, var(--charcoal) 50%, var(--black) 100%);
+        }
+
+        .workflow-steps {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3rem;
+            margin-top: 4rem;
+            position: relative;
+        }
+
+        .workflow-steps::before {
+            content: '';
+            position: absolute;
+            top: 60px;
+            left: 12.5%;
+            right: 12.5%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--accent), var(--accent-light), var(--accent), transparent);
+            animation: flowLine 3s ease-in-out infinite;
+        }
+
+        @keyframes flowLine {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        .workflow-step {
+            text-align: center;
+            opacity: 0;
+            transform: scale(0.9);
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .workflow-step.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .workflow-step:hover {
+            transform: scale(1.05);
+        }
+
+        .step-number {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 2rem;
+            background: var(--charcoal);
+            border: 3px solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .workflow-step:hover .step-number {
+            background: var(--accent);
+            transform: rotate(360deg);
+            box-shadow: 0 0 40px rgba(0, 212, 255, 1);
+        }
+
+        .step-number-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--accent);
+            font-weight: 700;
+            transition: color 0.3s ease;
+        }
+
+        .workflow-step:hover .step-number-text {
+            color: var(--black);
+        }
+
+        .workflow-step h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--white);
+        }
+
+        .workflow-step p {
+            color: var(--gray);
+            line-height: 1.7;
+        }
+
+        /* Contact Section */
+        #contact {
+            text-align: center;
+            padding: 10rem 5%;
+            background: var(--black);
+        }
+
+        .contact-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .contact-content h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            margin-bottom: 2rem;
+            line-height: 1.2;
+        }
+
+        .contact-content p {
+            font-size: 1.2rem;
+            color: var(--gray);
+            margin-bottom: 3rem;
+            line-height: 1.8;
+        }
+
+        .contact-email {
+            display: inline-block;
+            font-size: 1.5rem;
+            color: var(--accent);
+            text-decoration: none;
+            margin-bottom: 3rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--accent);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            position: relative;
+        }
+
+        .contact-email::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--white);
+            transition: width 0.4s ease;
+        }
+
+        .contact-email:hover {
+            color: var(--white);
+            transform: translateY(-3px);
+            text-shadow: 0 0 20px rgba(0, 212, 255, 1);
+        }
+
+        .contact-email:hover::after {
+            width: 100%;
+        }
+
+        /* Footer */
+        footer {
+            padding: 3rem 5%;
+            text-align: center;
+            border-top: 1px solid rgba(0,212,255,0.2);
+            color: var(--gray);
+            font-size: 0.9rem;
+            position: relative;
+        }
+
+        footer .logo-footer {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+
+        footer .logo-icon {
+            width: 35px;
+            height: 35px;
+            opacity: 0.8;
+        }
+
+        footer .logo-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent);
+            letter-spacing: 0.1em;
+        }
+
+        /* Floating particles background effect */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-20px) translateX(10px); }
+            50% { transform: translateY(-10px) translateX(-10px); }
+            75% { transform: translateY(-30px) translateX(5px); }
+        }
+
+        .particle {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0.3;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* Scroll Reveal */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .nav-links {
+                gap: 2rem;
+            }
+
+            .about-content,
+            .portfolio-item {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+
+            .skills-grid,
+            .workflow-steps {
+                grid-template-columns: 1fr;
+            }
+
+            .workflow-steps::before {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                padding: 1.5rem 5%;
+            }
+
+            .logo {
+                font-size: 1.4rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            section {
+                padding: 5rem 5%;
+            }
+
+            .cta-group {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .btn {
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom Cursor -->
+    <div class="cursor"></div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">
+            <div class="logo-icon">
+                <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Geometric S shape made of connected nodes -->
+                    <circle cx="30" cy="0" r="6" fill="#FF6B35"/>
+                    <circle cx="20" cy="20" r="6" fill="#FF6B35"/>
+                    <circle cx="30" cy="40" r="6" fill="#FF6B35"/>
+                    <circle cx="20" cy="60" r="6" fill="#FF6B35"/>
+                    
+                    <!-- Connecting lines -->
+                    <path d="M 30 6 L 23 17" stroke="#FF6B35" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M 22 26 L 28 34" stroke="#FF6B35" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M 28 46 L 22 54" stroke="#FF6B35" stroke-width="3" stroke-linecap="round"/>
+                    
+                    <!-- Additional accent dots -->
+                    <circle cx="40" cy="10" r="3" fill="#FF8C61" opacity="0.6"/>
+                    <circle cx="10" cy="30" r="3" fill="#FF8C61" opacity="0.6"/>
+                    <circle cx="40" cy="50" r="3" fill="#FF8C61" opacity="0.6"/>
+                </svg>
+            </div>
+            <span>SERVIO</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#about">About</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#portfolio">Work</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>
+                Precision in Every Frame.
+                <span class="highlight">Emotion in Every Color.</span>
+            </h1>
+            <p class="hero-subtitle">We transform raw footage into cinematic stories—one edit at a time.</p>
+            <div class="cta-group">
+                <a href="#portfolio" class="btn btn-primary">View Our Work</a>
+                <a href="#contact" class="btn btn-secondary">Get in Touch</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about">
+        <div class="section-header reveal">
+            <div class="section-number">01 — About</div>
+            <h2 class="section-title">Crafting Visual Stories with Intention</h2>
+        </div>
+        <div class="about-content reveal">
+            <div class="about-text">
+                <p>SERVIO is a creative duo dedicated to the art of visual storytelling. We believe great editing isn't about complexity—it's about clarity, rhythm, and emotion.</p>
+                <p>From seamless cuts to cinematic color grading, we approach every project with meticulous attention to detail. We're building our craft intentionally, refining our skills with each frame, and committed to delivering work that speaks for itself.</p>
+                <div class="philosophy">
+                    <div class="philosophy-label">Our Philosophy</div>
+                    <div class="philosophy-text">Clean edits. Honest storytelling. Cinematic finish.</div>
+                </div>
+            </div>
+            <div class="about-visual">
+                <div class="large-logo">
+                    <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="30" cy="0" r="6" fill="#FF6B35"/>
+                        <circle cx="20" cy="20" r="6" fill="#FF6B35"/>
+                        <circle cx="30" cy="40" r="6" fill="#FF6B35"/>
+                        <circle cx="20" cy="60" r="6" fill="#FF6B35"/>
+                        <path d="M 30 6 L 23 17" stroke="#FF6B35" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M 22 26 L 28 34" stroke="#FF6B35" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M 28 46 L 22 54" stroke="#FF6B35" stroke-width="3" stroke-linecap="round"/>
+                        <circle cx="40" cy="10" r="3" fill="#FF8C61" opacity="0.6"/>
+                        <circle cx="10" cy="30" r="3" fill="#FF8C61" opacity="0.6"/>
+                        <circle cx="40" cy="50" r="3" fill="#FF8C61" opacity="0.6"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills">
+        <div class="section-header reveal">
+            <div class="section-number">02 — Expertise</div>
+            <h2 class="section-title">Tools We Master</h2>
+        </div>
+        <div class="skills-grid">
+            <div class="skill-card reveal">
+                <div class="skill-icon">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/40/Adobe_Premiere_Pro_CC_icon.svg" alt="Adobe Premiere Pro">
+                </div>
+                <div class="skill-label">Adobe Premiere Pro</div>
+                <h3>Video Editing & Post-Production</h3>
+                <p>Precise cuts, seamless transitions, audio synchronization, and narrative pacing.</p>
+            </div>
+            <div class="skill-card reveal">
+                <div class="skill-icon">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/Adobe_After_Effects_CC_icon.svg" alt="Adobe After Effects">
+                </div>
+                <div class="skill-label">Adobe After Effects</div>
+                <h3>Motion Graphics & Animation</h3>
+                <p>Text animation, lower thirds, kinetic typography, and subtle visual effects.</p>
+            </div>
+            <div class="skill-card reveal">
+                <div class="skill-icon">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/4d/DaVinci_Resolve_Studio.png" alt="DaVinci Resolve">
+                </div>
+                <div class="skill-label">DaVinci Resolve</div>
+                <h3>Professional Color Grading</h3>
+                <p>Cinematic color correction, mood creation, LUT application, and final mastering.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Portfolio Section -->
+    <section id="portfolio">
+        <div class="section-header reveal">
+            <div class="section-number">03 — Portfolio</div>
+            <h2 class="section-title">Selected Work</h2>
+        </div>
+        <div class="portfolio-grid">
+            <div class="portfolio-item reveal">
+                <div class="portfolio-image"></div>
+                <div>
+                    <div class="portfolio-number">01</div>
+                    <h3>Brand Storytelling Reel</h3>
+                    <p>A 60-second brand narrative showcasing dynamic pacing, branded motion graphics, and warm color grading.</p>
+                    <div class="portfolio-focus">
+                        <span class="focus-tag">Storytelling</span>
+                        <span class="focus-tag">Rhythm</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="portfolio-item reveal">
+                <div class="portfolio-image"></div>
+                <div>
+                    <div class="portfolio-number">02</div>
+                    <h3>YouTube Content Edit</h3>
+                    <p>Fast-paced lifestyle vlog with jump cuts, text overlays, and vibrant color enhancement.</p>
+                    <div class="portfolio-focus">
+                        <span class="focus-tag">Retention</span>
+                        <span class="focus-tag">Platform Optimization</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="portfolio-item reveal">
+                <div class="portfolio-image"></div>
+                <div>
+                    <div class="portfolio-number">03</div>
+                    <h3>Cinematic Color Grade</h3>
+                    <p>Raw footage transformed with moody teal-and-orange grading, film emulation, and atmospheric depth.</p>
+                    <div class="portfolio-focus">
+                        <span class="focus-tag">Color Science</span>
+                        <span class="focus-tag">Mood</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="portfolio-item reveal">
+                <div class="portfolio-image"></div>
+                <div>
+                    <div class="portfolio-number">04</div>
+                    <h3>Music Video Cut</h3>
+                    <p>Beat-synced editing with rhythmic transitions and stylized motion graphics.</p>
+                    <div class="portfolio-focus">
+                        <span class="focus-tag">Audio-Visual Sync</span>
+                        <span class="focus-tag">Creative Timing</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 5rem;">
+            <p style="color: var(--gray); font-style: italic; font-size: 1.1rem;">More work available upon request.</p>
+        </div>
+    </section>
+
+    <!-- Workflow Section -->
+    <section id="workflow">
+        <div class="section-header reveal">
+            <div class="section-number">04 — Process</div>
+            <h2 class="section-title">How We Work</h2>
+        </div>
+        <div class="workflow-steps">
+            <div class="workflow-step reveal">
+                <div class="step-number">
+                    <span class="step-number-text">01</span>
+                </div>
+                <h3>Edit</h3>
+                <p>Structure the narrative. Build pacing. Refine cuts until every moment serves the story.</p>
+            </div>
+            <div class="workflow-step reveal">
+                <div class="step-number">
+                    <span class="step-number-text">02</span>
+                </div>
+                <h3>Enhance</h3>
+                <p>Add motion graphics, text animation, and visual layers that elevate without overwhelming.</p>
+            </div>
+            <div class="workflow-step reveal">
+                <div class="step-number">
+                    <span class="step-number-text">03</span>
+                </div>
+                <h3>Color Grade</h3>
+                <p>Apply cinematic color science—mood, tone, and polish that defines the final look.</p>
+            </div>
+            <div class="workflow-step reveal">
+                <div class="step-number">
+                    <span class="step-number-text">04</span>
+                </div>
+                <h3>Deliver</h3>
+                <p>Export in broadcast-quality formats, optimized for your platform and audience.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact">
+        <div class="contact-content reveal">
+            <h2>Let's Create Something Exceptional</h2>
+            <p>Whether you need a single edit or ongoing content production, we're ready to bring your vision to life.</p>
+            <a href="/cdn-cgi/l/email-protection#aeddcbdcd8c7c180cdc1c0dacfcddaeecbd6cfc3dec2cb80cdc1c3" class="contact-email"><span class="__cf_email__" data-cfemail="c2b1a7b0b4abadeca1adacb6a3a1b682a7baa3afb2aea7eca1adaf">[email&#160;protected]</span></a>
+            <br>
+            <a href="#contact" class="btn btn-primary" style="margin-top: 2rem;">Book a Consultation</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="logo-footer">
+            <div class="logo-icon">
+                <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="30" cy="0" r="6" fill="#FF6B35"/>
+                    <circle cx="20" cy="20" r="6" fill="#FF6B35"/>
+                    <circle cx="30" cy="40" r="6" fill="#FF6B35"/>
+                    <circle cx="20" cy="60" r="6" fill="#FF6B35"/>
+                    <path d="M 30 6 L 23 17" stroke="#FF6B35" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M 22 26 L 28 34" stroke="#FF6B35" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M 28 46 L 22 54" stroke="#FF6B35" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="40" cy="10" r="3" fill="#FF8C61" opacity="0.6"/>
+                    <circle cx="10" cy="30" r="3" fill="#FF8C61" opacity="0.6"/>
+                    <circle cx="40" cy="50" r="3" fill="#FF8C61" opacity="0.6"/>
+                </svg>
+            </div>
+            <span class="logo-text">SERVIO</span>
+        </div>
+        <p>&copy; 2026 SERVIO. Precision in every frame. Emotion in every color.</p>
+    </footer>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // Simple Custom Cursor
+        const cursor = document.querySelector('.cursor');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        // Cursor hover effects
+        const interactiveElements = document.querySelectorAll('a, button, .btn, .portfolio-image, .skill-card, .focus-tag');
+        interactiveElements.forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursor.classList.add('active');
+            });
+            el.addEventListener('mouseleave', () => {
+                cursor.classList.remove('active');
+            });
+        });
+
+        // Create floating particles
+        function createParticles() {
+            const particleCount = 20;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                document.body.appendChild(particle);
+            }
+        }
+        createParticles();
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Parallax effect on scroll
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const heroContent = document.querySelector('.hero-content');
+            if (heroContent) {
+                heroContent.style.transform = `translateY(${scrolled * 0.5}px)`;
+                heroContent.style.opacity = 1 - (scrolled / 600);
+            }
+        });
+
+        // Magnetic button effect
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                btn.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
+            });
+            btn.addEventListener('mouseleave', () => {
+                btn.style.transform = 'translate(0, 0)';
+            });
+        });
+
+        // Tilt effect on portfolio images
+        document.querySelectorAll('.portfolio-image').forEach(img => {
+            img.addEventListener('mousemove', (e) => {
+                const rect = img.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = (y - centerY) / 10;
+                const rotateY = (centerX - x) / 10;
+                img.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+            });
+            img.addEventListener('mouseleave', () => {
+                img.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+            });
+        });
+
+        // Skill card tilt effect
+        document.querySelectorAll('.skill-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = (y - centerY) / 20;
+                const rotateY = (centerX - x) / 20;
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-15px) scale(1.02)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0) scale(1)';
+            });
+        });
+
+        // Scroll reveal animation
+        const observerOptions = {
+            threshold: 0.15,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.classList.add('visible');
+                    }, index * 100);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal, .section-header, .skill-card, .portfolio-item, .workflow-step').forEach((el) => {
+            observer.observe(el);
+        });
+
+        // Stagger skill cards
+        const skillCards = document.querySelectorAll('.skill-card');
+        skillCards.forEach((card, index) => {
+            card.style.transitionDelay = `${index * 0.15}s`;
+        });
+
+        // Stagger workflow steps
+        const workflowSteps = document.querySelectorAll('.workflow-step');
+        workflowSteps.forEach((step, index) => {
+            step.style.transitionDelay = `${index * 0.2}s`;
+        });
+    </script>
+</body>
+</html>
